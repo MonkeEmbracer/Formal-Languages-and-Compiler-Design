@@ -3,6 +3,7 @@
 Finite automata for Poemia's identifiers and integer constants, plus a script that turns any FA into an equivalent regular grammar (FA -> RG).
 
 [GitHub link](https://github.com/MonkeEmbracer/Formal-Languages-and-Compiler-Design)
+
 ## Definitions
 
 **Finite automaton:** `M = (Q, Σ, d, q0, F)`
