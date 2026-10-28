@@ -1,151 +1,221 @@
-# Poemia - Lexical Analysis
+# Poemia Docs
 
-This is the lexer for Poemia, my story-based DSL from Lab 1. It reads a `.poem` program and spits out the PIF, the ST and any lexical errors.
+Hi. I'm Bogdan, and this is how my DSL, Poemia, works.
+It's a computational math language that allows you to write the code in various, story-based ways.
 
-[GitHub link](https://github.com/MonkeEmbracer/Formal-Languages-and-Compiler-Design)
+# Elements explained
+### Program structure
+Every Poemia program must have:
+- A title, written on the first line of the program
+- An authorship subtitle, written on the second line of the program (`by (...)`)
+- The program's statements, separated by new line characters
 
-## Files
-- `lexer.l` – the Flex lexer (all the token rules + `main`)
-- `st.h` / `st.c` – the symbol table, a hash table I implemented in C
-- `tokens.txt – the list of tokens; a token's code is its line number (starting at 0)
+### Declaring a variable
+You may declare a variable using various keywords (or rather keyphrases heh), such as `There once was` or `There shall be`.
 
-## Building and running
+The structure of the declaration statement is as follows:
+- Declaration keyword
+- Variable name
+- Variable type
+
+Example:
+`Once upon a time, there was Bogdan, a math wizard`
+
+### Variable names
+Variable names can contain multiple words, separated by spaces, and the separate words MUST start with a capital letter. They're proper names, after all!
+
+Examples of valid variable names: `Radiohead`, `An Amazing Variable`, `A A A A A A AaaaAAAA`
+
+Examples of bad variable names: `variable`, `iLoveCamelCase`, `snake_case_too`, `I Sometimes Forget to Capitalise My Words`
+
+### Variable types
+Currently, there are two big variable types:
+- Math wizards 
+	- Boring name: Integers
+- Eternal worms
+	- Boring name: Queues
+
+You know integers. We'll tackle eternal worms later.
+
+### Assignment statements
+You may assign various integer values and expressions to your math wizard variables.
+
+Statement structure:
+- Intro keyword (e.g. `Then,`, `One day, `)
+- Variable name
+- Middle keyword (e.g. `became`, `turned`)
+- Integer expression
+
+Example:
+`Suddenly, Cosmin shapeshifted into 6 times 6`
+
+### Integer expressions
+You may write arithmetic expressions that include any integer values and the usual operands.
+
+Supported operations and some (not all!) ways to express them:
+- Addition -- `plus`, `added to`, `combined with`
+- Subtraction -- `minus`, `without`, `subtracting`
+- Multiplication -- `multiplied by`, `times`
+- Division -- `divided by`, `given evenly to`, `shared between`
+
+### Boolean expressions
+You may write boolean expressions using various elements:
+- AND/OR operators (`or`/`and`)
+- Comparison expressions
+- True/False values (`grass is green`/`black is white`)
+
+Comparison operators supported, with some ways to express them:
+- Greater than -- `is greater than`, `trumps`, `surpasses`
+- Greater or equal than -- `is at least`, `is greater or equal to`
+- Smaller than -- `is smaller than`, `is dwarfed by`, `is trumped by`
+- Smaller or equal than -- `is at most`, `is smaller or equal to`
+- Equality -- `is`, `is exactly`, `mirrors`
+- Inequality -- `is different from`, `differs from`
+
+### Decision statements
+Decision statements are perhaps the ones that allow the most freedom and creativity! You can mix and match the various keywords to make the story yours!
+
+Statement structure:
+- Intro keyword
+- Continuation keyword
+- Condition
+- Statement block
+- Optional else keyword + block
+
+Example:
 ```
-flex lexer.l && gcc lex.yy.c st.c -o lexer
-./lexer program.poem [tokens.txt]
-```
-
-The token list defaults to `tokens.txt` in the current folder. The run produces:
-- `PIF.out` - the Program Internal Form
-- `ST.out` - the Symbol Table
-- lexical errors printed in the terminal (with line numbers), plus `Lexically correct` at the end if there were none
-
-## How Flex is used
-
-Flex takes `lexer.l` and generates `lex.yy.c`, which contains `yylex()`, a function that scans the input and runs the matching rule for each piece of text. The `.l` file has three parts separated by `%%`:
-1. **Definitions** - C includes and globals, options (`noyywrap`, `yylineno` for line numbers), start conditions and named regexes like `ID` and `INT`
-2. **Rules** - `pattern { C action }`. Every action calls `emit("TOKEN_NAME")`, which writes the token to the PIF
-3. **User code** - loading `token.in`, `emit`, error reporting and `main`
-
-Two Flex behaviours the whole lexer relies on:
-- **Longest match** - if several rules match, the longest one wins. That's why `is reborn as` beats `is`, and `", of "` beats `", "`
-- **Rule order** - on a tie, the rule written first wins. That's why some keyword rules sit above the identifier rule
-
-### Start conditions (title and author)
-
-The first two lines of a program follow different rules than the rest (lowercase letters, `_`, punctuation, etc.), so they're lexed in their own **exclusive start conditions** (`%x`), where only that state's rules are active:
-
-```
-TITLE --\n--> AUTHOR --"by "--> AUTHOR_NAME --\n--> INITIAL (the actual program)
-```
-
-`main` starts the lexer in `TITLE`. If line 2 doesn't start with `by` , you get an error and the lexer goes back to `INITIAL` so the rest of the program still gets lexed. The catch-all error rule is written as `<*>.` so it works in every state.
-
-## Detecting tokens
-
-### Keywords, operators, separators
-
-Every keyphrase from the BNF is a literal string in a rule. All the variants that mean the same thing share one token, e.g. `became`, `turned into` and `shapeshifted into` are all `ASSIGN_MID`, and `plus` / `combined with` are both `OP_PLUS`. Most operators include their surrounding spaces, so spaces never need to be skipped separately. These tokens go into the PIF with ST position `-1`.
-
-### Identifiers
-
-```
-IDWORD [A-Z][a-zA-Z]*
-ID     {IDWORD}(" "{IDWORD})*
-```
-
-One or more words separated by single spaces, each starting with a capital letter (e.g. `Number Of Sacrifices`). Since keywords like `became` start with a space followed by a lowercase word, the identifier naturally stops right before them.
-
-**The `If`/`Should` problem:** these two if-keywords look exactly like identifier words, so `If Big Worm` would get lexed as one identifier. I fixed it with trailing context:
-
-```
-"If "/{ID}
-"Should "/{ID}
-```
-
-`r/s` means "match `r` only if `s` comes after it, but don't consume `s`". Flex counts the lookahead when comparing lengths, so this ties with the identifier rule, and since it's written first, it wins. The side effect is that **identifiers can't start with the words `If` or `Should`**.
-
-### Constants
-
-- **Integers** – `0|-?[1-9][0-9]*`. Leading zeros (`007`) and `-0` have their own error rule, otherwise they'd be silently split into several valid integers.
-- **Strings** (print messages) – `\"{MSG_TEXT}\"`, where `MSG_TEXT` is the allowed message characters from the BNF. A quote with no closing quote on the same line is reported as an unterminated string. Strings are stored in the ST with their quotes.
-
-Title and author are only tokens in the PIF; they don't go in the ST.
-
-### Errors
-
-Any character no rule matches hits `<*>.` and is reported with its line number. There are also specific errors for invalid integers, unterminated strings and a missing `by` line. The lexer keeps going after an error, so you see all of them in one run.
-
-## Symbol Table
-
-One ST holds identifiers, integer constants and string constants.
-
-### Data structure
-
-A **hash table with separate chaining**:
-
-- an array of 101 buckets, each one being the head of a linked list
-- each entry stores the lexeme (a copy of the text), its position, and a pointer to the next entry in the bucket
-- the hash is `h = h * 31 + c` over the characters, starting from 0, then `% 101` (31 is the same multiplier Java's `String.hashCode()` uses)
-
-Collisions are no problem, the entry just goes into the same list. The table doesn't rehash; at 101 buckets the chains stay tiny for programs this size.
-
-Each new lexeme gets a **position** from a counter (0, 1, 2...) that never changes. There's also a `by_position` array (doubles in size when full) so the ST can be printed in position order.
-
-### Operations
-
-- `st_insert_or_get(lexeme)` – hashes the lexeme and walks its bucket. If it's already there, returns its position; otherwise adds a new entry and returns the new position. That way, every use of `Romeo` points to the same entry.
-- `st_print(file)` – writes `position bucket lexeme` for every entry.
-- `st_free()` – frees everything.
-
-## PIF
-
-The PIF is the program as a list of `(token code, ST position)` pairs, in order. Identifiers and constants get their ST position, everything else gets `-1`.
-
-## Example
-
-```
-Love Story
-by Bog
-
-There was Romeo, a math wizard
-One day, Romeo became 3 plus Romeo
-An enamoured poet writes down his thoughts: "Hi!"
+They encountered a witch, who advised them carefully:
+'Tread carefully, for if Your Variable is greater than My Variable split in 2,
+I shall make sure that
+To your dismay, Your Variable turns into My Variable.
+Should the odds be in your favour,
+Then, My Variable shall turn into Your Variable.'
 ```
 
-`ST.out`:
+### Loop statements
+Loop statements are fairly simple -- they allow you to run a block of code repeatedly until the condition is met (it's a `repeat ... until`, if you will).
 
-```
-pos      bucket   lexeme
-0        15       Romeo
-1        51       3
-2        94       "Hi!"
-```
+Statement structure:
+- Intro keyword
+- Statement block
+- End keyword (always starting with `But`)
+- Condition
 
-`PIF.out` (from the declaration line on):
-
+Example:
 ```
-code pos  token
-7    -1   DECL_KW
-0    0    IDENTIFIER       <- Romeo
-8    -1   COMMA_SP
-9    -1   TYPE_INT
-6    -1   NEWLINE
-11   -1   ASSIGN_KW
-0    0    IDENTIFIER       <- Romeo again, same position
-12   -1   ASSIGN_MID
-1    1    INT_CONST        <- 3
-13   -1   OP_PLUS
-0    0    IDENTIFIER
-6    -1   NEWLINE
-41   -1   PRINT_KW
-43   -1   PRINT_MESSAGE
-2    2    STRING_CONST     <- "Hi!"
-6    -1   NEWLINE
+A curse has been cast upon our heroes, rendering them to repeat the following, mindlessly:
+Repeatedly, Codrin becomes Codrin times Codrin
+But fortunately, they were able to break the curse under the condition that Codrin is at least Dede
 ```
 
-## Known limitations
+### Eternal worms
+Eternal worms are, at their core, spicy queue data structures.
 
-- Identifiers can't start with `If` or `Should` (see above).
-- A lowercase-starting identifier like `iLoveCamelCase` reports an error on the first letter, then the rest (`LoveCamelCase`) is read as a valid identifier.
-- Windows `\r\n` line endings aren't supported, files need `\n`.
+The following operations are available on eternal worms:
+- Devour (push)
+	- Example: `The eternal worm Bogdan devours Connecticut`
+- Release (pop)
+	- Example: `The eternal worm Bogdan has released its earliest victim`
+- Peek/Top (it's an expression!)
+	- Example: `the earliest victim of Bogdan`
+- Slay (clear)
+	- Example: `Rejoice! Bogdan has been slain!`
+- Is Hungry (empty) (also, this one's an expression too)
+	- Example: `Bogdan is hungry`
+
+### Input/Output operations
+Read and write statements are very straightforward.
+
+You may read an integer value into a variable using various keywords.
+
+Example:
+`The gods shall communicate the role Your Variable shall take`
+
+You may print out both integer or boolean expressions, as well as messages!
+
+Examples:
+- Integer expression: `An enamoured poet writes down his thoughts, of Positive Numbers Count`
+- Message: `A pale spectator hurried to town, to preach what he had found: "Suntem cooked"`
+
+# Sample programs
+### Mystery program #1
+```
+An Old Poem
+by anonymous_poet213
+
+Once upon a time, there was Romeo, a math wizard
+There also was Juliet, a math wizard
+
+A song only their ears can hear has inspired Romeo to find a new identity
+Dissatisfied with their existence, Juliet has decided to look for their purpose in the stars
+
+Let there be Love, a math wizard
+One day, Love was reborn as Romeo combined with Juliet
+
+An enamoured poet writes down his thoughts, of Love
+```
+
+### Mystery program #2
+```
+Please
+by Yours Truly
+
+There once was My Grade, a math wizard
+The gods shall communicate the role My Grade shall take
+
+An old lady approaches, teary eyed, warning our heroes:
+'Should My Grade be dwarfed by 5,
+The legend says that
+Words shall be written down for generations to come: "Its so over".'
+```
+
+### Mystery program #3
+```
+Gory Tale
+by Shakespeare
+
+Once upon a time, there was Claudiu, an eternal worm
+There also was Claudia, an eternal worm
+
+There was Counter, a math wizard
+There also was Number Of Sacrifices, a math wizard
+Unbeknownst to man, there also was Cosmin, a math wizard
+
+The gods shall communicate the role Number Of Sacrifices shall take
+One day, Counter became 0
+
+A curse has been cast upon our heroes, rendering them to repeat the following, mindlessly:
+Struck by divine inspiration, Cosmin is ready to take on a newfound identity
+The eternal worm Claudiu devours Cosmin
+Obviously, Counter is reborn as Counter compounded with 1
+But fortunately, they were able to break the curse under the condition that Counter mirrored Number Of Sacrifices
+
+Shockingly, Counter became 0
+
+They realised they had been dreaming the same strange dream every night:
+A voice is heard from above, speaking of the reborn Cosmin
+The eternal worm Claudia devours Cosmin
+Repeatedly, Counter turns into Counter merged with 1
+But they realised the condition to break the spell was that Counter was exactly Number Of Sacrifices
+
+Let there be Pickles, an eternal worm
+Let there be Vessel One, a math wizard
+Let there be Vessel Two, a math wizard
+
+Our heroes found themselves waking up every day to experience the following scenario exactly:
+Out of the blue, Vessel One shapeshifted into the earliest victim of Claudiu
+Suddenly, Vessel Two turned into the earliest victim of Claudia
+The eternal worm Claudiu released its earliest victim
+The eternal worm Claudia released its earliest victim
+
+To their dismay, Cosmin was reborn as Vessel One combined with Vessel Two
+They passed by a drunken sailor, who loudly shouted at them:
+'Listen here, bastards! If Cosmin split in 2 multiplied by 2 is precisely Cosmin,
+Then the gods shall decree that
+The eternal worm Pickles shall devour Cosmin
+Words shall be written down for generations to come, of Cosmin
+Channels across the globe broadcast breaking news: " ".'
+
+But they realised they wouldn't go back to normal until Claudiu is hungry or Claudia is famished
+```
+

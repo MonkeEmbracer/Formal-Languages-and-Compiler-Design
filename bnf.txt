@@ -1,0 +1,94 @@
+<program> ::= <title> "\nby "<author> "\n" <statement> <statements>
+<statements> ::= "\n" <statement> <statements> | epsilon
+<statement> ::= <declaration_statement> | <assignment_statement> | <if_statement> | <repeat_statement> | <print_statement> |  <read_statement> | <queue_pop> | <queue_push> | <queue_clear> | epsilon
+
+<identifier> ::= <identifier_word> <identifier_rest> 
+<identifier_rest> ::= " " <identifier_word> <identifier_rest> | epsilon
+<identifier_word> ::= <capital_letter> <identifier_word_rest>
+<identifier_word_rest> ::= <letter> <identifier_word_rest> | epsilon
+<capital_letter> ::= "A" | "B" | ... | "Z"
+<letter> ::= <capital_letter> | "a" | "b" | ... | "z"
+
+<integer> ::= "0" | <optional_minus> <non_zero_digit> <digits>
+<optional_minus> ::= "-" | epsilon
+<non_zero_digit> ::= "1" | ... | "9"
+<digit> ::= <non_zero_digit> | "0"
+<digits> ::= <digit> <digits> | epsilon
+
+<title> ::= <letter> <title_characters>
+<title_characters> ::= <title_character> <title_characters> | epsilon
+<title_character> ::= <letter> | <digit> | " " | "." | ";" | "," | "!" | "?" | "-"
+<author> ::= <letter> <author_characters>
+<author_characters> ::= <author_character> <author_characters> | epsilon
+<author_character> ::= <letter> | <digit> | " " | "." | "," | "-" | "_"
+
+<declaration_statement> ::= <declaration_keyword> <identifier> ", " <declaration_type>
+<declaration_keyword> ::= "There once was " | "Let there be " | "There existed " | "Once upon a time, there was " | "There also was " | "There was " | "Unbeknownst to man, there also was " | "There shall be "
+<declaration_type> ::= "a math wizard" | "an eternal worm"
+
+<assignment_statement> ::= <assignment_keyword_start> <identifier> <assignment_keyword_middle> <integer_expression>
+<assignment_keyword_start> ::= "Then, " | "One day, " | "Suddenly, " | "Surprisingly, " | "Shockingly, " | "As foretold, " | "Obviously, " | "To your dismay, " | "To their dismay, " | "Repeatedly, " | "Out of the blue, "
+<assignment_keyword_middle> ::= " became " | " turned into " | " turned " | " was reborn as " | " will turn to " | " turns into " | " becomes " | " shall become " | " shapeshifts into " | " shapeshifted into " | " shall shapeshift into " | " shall turn into " | " is reborn as "
+
+<integer_expression> ::= <term> <expression_rest>
+<expression_rest> ::= <additive_operator> <term> <expression_rest> | epsilon
+<term> ::= <factor> <term_rest>
+<term_rest> ::= <multiplicative_operator> <factor> <term_rest> | epsilon
+<factor> ::= <identifier> | <integer> | "(" <integer_expression> ")" | <queue_top>
+<additive_operator> ::= <additive_operator_positive> | <additive_operator_negative>
+<additive_operator_positive> ::= " plus " | " added to " | " combined with " | " compounded with " | " merged with " | " along with "
+<additive_operator_negative> ::= " minus " | " without " | " subtracting "
+<multiplicative_operator> ::= <multiplicative_operator_positive> | <multiplicative_operator_negative>
+<multiplicative_operator_positive> ::= " multiplied by " | " multiplied with " | " times "
+<multiplicative_operator_negative> ::= " divided by " | " shared between " | " given evenly to " | " split in "
+
+<if_statement> ::= <if_keyword_start> ":\n'" <if_keyword_continuation> <boolean_expression> ",\n" <if_keyword_then> "\n" <statement_block> "." <optional_else> "'" 
+<if_keyword_start> ::= "They encountered a witch, who advised them carefully" | "They passed by a drunken sailor, who loudly shouted at them" | "Hearing the distant song of a bard, they approached to listen closely" | "You shall encounter an old lady, who will advise you the following" | "An old lady approaches, teary eyed, warning our heroes"
+<if_keyword_continuation> ::= "Should " | "If " | "Beware travellers, for if " | "Tread carefully, for if " | "Listen here, bastards! If " | "I curse you, peasants! If " | "So says the old song, that if " | "The townsfolk have been saying that " | "I heard that if "
+<if_keyword_then> ::= "Then the gods shall decree that" | "The legend says that" | "It is said that" | "I shall make sure that"
+<statement_block> ::= <statement> <statements>
+<optional_else> ::= "\n" <else_keyword> "\n" <statement_block> "." | epsilon
+<else_keyword> ::= "Should the prophecy not be fulfilled," | "Otherwise," | "Should lady luck not be on your side," | "Should the odds be in your favour,"
+
+<boolean_expression> ::= <boolean_term> <boolean_expression_rest>
+<boolean_expression_rest> ::= <or_operator> <boolean_term> <boolean_expression_rest> | epsilon
+<boolean_term> ::= <boolean_factor> <boolean_term_rest>
+<boolean_term_rest> ::= <and_operator> <boolean_factor> <boolean_term_rest> | epsilon
+<boolean_factor> ::= <comparison_expression> | "(" <boolean_expression> ")" | "grass is green" | "black is white" | <queue_is_empty>
+<or_operator> ::= " or "
+<and_operator> ::= " and "
+<comparison_expression> ::= <integer_expression> <comparison_operator> <integer_expression>
+<comparison_operator> ::= <comparison_operator_gr> | <comparison_operator_ge> | <comparison_operator_sm> | <comparison_operator_se> | <comparison_operator_eq> | <comparison_operator_df> 
+<comparison_operator_gr> ::= " is greater than " | " trumps " | " shall be greater than " | " surpasses " | " dwarfs " | " dwarfed " | " surpassed " | " was greater than " | " dwarf " | " be greater than "
+<comparison_operator_ge> ::= " is greater or equal to " | " shall be at least " | " is at least " | " was at least " | " be at least "
+<comparison_operator_sm> ::= " is smaller than " | " is trumped by " | " is dwarfed by " | " shall be smaller than " | " was dwarfed by " | " was smaller than " | " be dwarfed by "
+<comparison_operator_se> ::= " is smaller or equal to " | " shall be smaller or equal to " | " is at most " | " shall be at most " | " was at most " | " be at most "
+<comparison_operator_eq> ::= " is exactly " | " is precisely " | " is " | " mirrors " | " shall mirror " | " mirrored " | " was " | " be " | " was exactly " | " be exactly "
+<comparison_operator_df> ::= " is different from " | " differs from " | " shall be different from " | " was different from " | " differ from "
+
+<repeat_statement> ::= <repeat_keyword_start> ":\n" <statement_block> "\nBut " <repeat_keyword_end> " " <boolean_expression>
+<repeat_keyword_start> ::= "Our heroes found themselves waking up every day to experience the following scenario exactly" | "They realised they had been dreaming the same strange dream every night" | "A curse has been cast upon our heroes, rendering them to repeat the following, mindlessly"
+<repeat_keyword_end> ::= "they realised they wouldn't go back to normal until" | "they realised the condition to break the spell was that" | "fortunately, they were able to break the curse under the condition that"
+
+<queue_push> ::= "The eternal worm " <identifier> " has devoured " <integer_expression> | "The eternal worm " <identifier> " devours " <integer_expression> | "The eternal worm " <identifier> " shall devour " <integer_expression> | "Our dear " <integer_expression> " has been devoured by " <identifier>
+<queue_pop> ::= "The eternal worm " <identifier> <queue_pop_verb> "its earliest victim"
+<queue_pop_verb> ::= " has released " | " releases " | " shall release " | " released "
+<queue_top> ::= "the earliest victim of " <identifier>
+<queue_clear> ::= "Rejoice! " <identifier> " has been slain!" | "With a swift blow, " <identifier> " is slain" | "Blood of an eternal worm shall spill, " <identifier> ", by name"
+<queue_is_empty> ::= <identifier> " is hungry" | <identifier> " is famished"
+
+<read_statement> ::= "The gods shall communicate the role " <identifier> " shall take" | "A voice is heard from above, speaking of the reborn " <identifier> | "Struck by divine inspiration, " <identifier> " is ready to take on a newfound identity" | "The gods have bestowed a new identity upon " <identifier> | "A song only their ears can hear has inspired " <identifier> " to find a new identity" | "Dissatisfied with their existence, " <identifier> " has decided to look for their purpose in the stars"
+
+<print_statement> ::= <print_keyword> ": \"" <message> "\"" | <print_keyword> ", of " <printable_value>
+<print_keyword> ::= "An enamoured poet writes down his thoughts" | "Channels across the globe broadcast breaking news" | "Words shall be written down for generations to come" | "A pale spectator hurried to town, to preach what he had found"
+<message> ::= <message_character> <message> | epsilon
+<message_character> ::= <letter> | <digit> | " " | "." | ";" | "," | "!" | "?" | "-"
+<printable_value> ::= <integer_expression> | <boolean_expression>
+
+
+
+
+
+
+
+
