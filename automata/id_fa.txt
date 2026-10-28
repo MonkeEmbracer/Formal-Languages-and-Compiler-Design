@@ -1,0 +1,8 @@
+Q = {p, q}
+Σ = {A-Z, a-z, space}
+d(p, A-Z) = q
+d(q, A-Z) = q
+d(q, a-z) = q
+d(q, space) = p
+q0 = p
+F = {q}
