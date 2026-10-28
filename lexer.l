@@ -19,9 +19,9 @@ void lex_error(int line, const char* message, const char* text);
 
 %x TITLE AUTHOR AUTHOR_NAME
 
-TITLE_TEXT  [a-zA-Z][a-zA-Z0-9 .;,!?-]*
+TITLE_TEXT [a-zA-Z][a-zA-Z0-9 .;,!?-]*
 AUTHOR_TEXT [a-zA-Z][a-zA-Z0-9 .,_-]*
-MSG_TEXT    [a-zA-Z0-9 .;,!?-]*
+MSG_TEXT [a-zA-Z0-9 .;,!?-]*
 
 IDWORD [A-Z][a-zA-Z]*
 ID {IDWORD}(" "{IDWORD})*
