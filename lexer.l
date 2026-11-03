@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "st.h"
+#include "fa/fa.h"
+
+FA id_fa;
+FA int_fa;
 
 #define MAX_TOKENS 128
 
@@ -23,9 +27,10 @@ TITLE_TEXT [a-zA-Z][a-zA-Z0-9 .;,!?-]*
 AUTHOR_TEXT [a-zA-Z][a-zA-Z0-9 .,_-]*
 MSG_TEXT [a-zA-Z0-9 .;,!?-]*
 
-IDWORD [A-Z][a-zA-Z]*
-ID {IDWORD}(" "{IDWORD})*
-INT 0|-?[1-9][0-9]*
+ANYWORD [A-Za-z][A-Za-z0-9_]*
+CAPWORD [A-Z][A-Za-z0-9_]*
+ID {ANYWORD}(" "{CAPWORD})*
+INT -?[0-9]+
 
 %%
 
@@ -47,9 +52,22 @@ INT 0|-?[1-9][0-9]*
 "Should "/{ID} { emit("IF_CONT"); }
 "If "/{ID} { emit("IF_CONT"); }
 
-{ID} { emit("IDENTIFIER"); }
-{INT} { emit("INT_CONST"); }
--?0[0-9]+|-0 { lex_error(yylineno, "invalid integer", yytext); }
+{ID} {
+    if (fa_accepts(&id_fa, yytext)) {
+        emit("IDENTIFIER");
+    }
+    else {
+        lex_error(yylineno, "invalid identifier", yytext);
+    }
+}
+{INT} {
+    if (fa_accepts(&int_fa, yytext)) {
+        emit("INT_CONST");
+    }
+    else {
+        lex_error(yylineno, "invalid integer", yytext);
+    }
+}
 \n { emit("NEWLINE"); }
 
 "Then, "|"One day, "|"Suddenly, "|"Surprisingly, "|"Shockingly, "|"As foretold, "|"Obviously, "|"To your dismay, "|"To their dismay, "|"Repeatedly, "|"Out of the blue, " {
@@ -241,6 +259,9 @@ int main(int argc, char** argv) {
 
     pif = fopen("pif.out", "w");
     fprintf(pif, "%-4s %-4s %s\n", "code", "pos", "token");
+
+    fa_load(&id_fa, "fa/fa_id.in");
+    fa_load(&int_fa, "fa/fa_int.in");
 
     BEGIN(TITLE);
     yylex();
