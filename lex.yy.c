@@ -2096,6 +2096,7 @@ char *yytext;
 #include <string.h>
 #include "st.h"
 #include "fa/fa.h"
+#include "poemia.tab.h"
 
 FA id_fa;
 FA int_fa;
@@ -2109,14 +2110,14 @@ int error_count = 0;
 
 void emit(const char* name);
 void lex_error(int line, const char* message, const char* text);
-#line 2112 "lex.yy.c"
+#line 2113 "lex.yy.c"
 
-#line 2114 "lex.yy.c"
+#line 2115 "lex.yy.c"
 
 #define INITIAL 0
-#define TITLE 1
-#define AUTHOR 2
-#define AUTHOR_NAME 3
+#define S_TITLE 1
+#define S_AUTHOR 2
+#define S_AUTHOR_NAME 3
 
 #ifndef YY_NO_UNISTD_H
 /* Special case for "unistd.h", since it is non-ANSI. We include it way
@@ -2331,10 +2332,10 @@ YY_DECL
 		}
 
 	{
-#line 35 "lexer.l"
+#line 36 "lexer.l"
 
 
-#line 2337 "lex.yy.c"
+#line 2338 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -2403,78 +2404,78 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 37 "lexer.l"
-{ emit("TITLE"); }
+#line 38 "lexer.l"
+{ emit("TITLE"); return TITLE; }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 38 "lexer.l"
-{ emit("NEWLINE"); BEGIN(AUTHOR); }
+#line 39 "lexer.l"
+{ BEGIN(S_AUTHOR); emit("NEWLINE"); return NEWLINE; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 40 "lexer.l"
-{ emit("BY"); BEGIN(AUTHOR_NAME); }
+#line 41 "lexer.l"
+{ BEGIN(S_AUTHOR_NAME); emit("BY"); return BY; }
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 41 "lexer.l"
+#line 42 "lexer.l"
 { lex_error(yylineno - 1, "expected 'by <author>'", NULL); BEGIN(INITIAL); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 42 "lexer.l"
-{ emit("AUTHOR"); }
+#line 43 "lexer.l"
+{ emit("AUTHOR"); return AUTHOR; }
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 43 "lexer.l"
-{ emit("NEWLINE"); BEGIN(INITIAL); }
+#line 44 "lexer.l"
+{ BEGIN(INITIAL); emit("NEWLINE"); return NEWLINE; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 45 "lexer.l"
+#line 46 "lexer.l"
 {
-    emit("DECL_KW");
+    emit("DECL_KW"); return DECL_KW;
 }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 48 "lexer.l"
-{ emit("COMMA_SP"); }
+#line 49 "lexer.l"
+{ emit("COMMA_SP"); return COMMA_SP; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 49 "lexer.l"
-{ emit("TYPE_INT"); }
+#line 50 "lexer.l"
+{ emit("TYPE_INT"); return TYPE_INT; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 50 "lexer.l"
-{ emit("TYPE_QUEUE"); }
+#line 51 "lexer.l"
+{ emit("TYPE_QUEUE"); return TYPE_QUEUE; }
 	YY_BREAK
 case 11:
 *yy_cp = (yy_hold_char); /* undo effects of setting up yytext */
 (yy_c_buf_p) = yy_cp = yy_bp + 7;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 52 "lexer.l"
-{ emit("IF_CONT"); }
+#line 53 "lexer.l"
+{ emit("IF_CONT"); return IF_CONT; }
 	YY_BREAK
 case 12:
 *yy_cp = (yy_hold_char); /* undo effects of setting up yytext */
 (yy_c_buf_p) = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 53 "lexer.l"
-{ emit("IF_CONT"); }
+#line 54 "lexer.l"
+{ emit("IF_CONT"); return IF_CONT; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 55 "lexer.l"
+#line 56 "lexer.l"
 {
     if (fa_accepts(&id_fa, yytext)) {
         emit("IDENTIFIER");
@@ -2482,11 +2483,12 @@ YY_RULE_SETUP
     else {
         lex_error(yylineno, "invalid identifier", yytext);
     }
+    return IDENTIFIER;
 }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 63 "lexer.l"
+#line 65 "lexer.l"
 {
     if (fa_accepts(&int_fa, yytext)) {
         emit("INT_CONST");
@@ -2494,314 +2496,315 @@ YY_RULE_SETUP
     else {
         lex_error(yylineno, "invalid integer", yytext);
     }
+    return INT_CONST;
 }
 	YY_BREAK
 case 15:
 /* rule 15 can match eol */
 YY_RULE_SETUP
-#line 71 "lexer.l"
-{ emit("NEWLINE"); }
+#line 74 "lexer.l"
+{ emit("NEWLINE"); return NEWLINE; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 73 "lexer.l"
+#line 76 "lexer.l"
 {
-    emit("ASSIGN_KW");
+    emit("ASSIGN_KW"); return ASSIGN_KW;
 }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 76 "lexer.l"
+#line 79 "lexer.l"
 {
-    emit("ASSIGN_MID");
+    emit("ASSIGN_MID"); return ASSIGN_MID;
 }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 80 "lexer.l"
+#line 83 "lexer.l"
 {
-    emit("OP_PLUS");
+    emit("OP_PLUS"); return OP_PLUS;
 }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 83 "lexer.l"
+#line 86 "lexer.l"
 {
-    emit("OP_MINUS");
+    emit("OP_MINUS"); return OP_MINUS;
 }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 86 "lexer.l"
+#line 89 "lexer.l"
 {
-    emit("OP_TIMES");
+    emit("OP_TIMES"); return OP_TIMES;
 }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 89 "lexer.l"
+#line 92 "lexer.l"
 {
-    emit("OP_DIV");
+    emit("OP_DIV"); return OP_DIV;
 }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 92 "lexer.l"
-{ emit("LPAREN"); }
+#line 95 "lexer.l"
+{ emit("LPAREN"); return LPAREN; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 93 "lexer.l"
-{ emit("RPAREN"); }
+#line 96 "lexer.l"
+{ emit("RPAREN"); return RPAREN; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 95 "lexer.l"
+#line 98 "lexer.l"
 {
-    emit("CMP_GT");
+    emit("CMP_GT"); return CMP_GT;
 }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 98 "lexer.l"
+#line 101 "lexer.l"
 {
-    emit("CMP_GE");
+    emit("CMP_GE"); return CMP_GE;
 }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 101 "lexer.l"
+#line 104 "lexer.l"
 {
-    emit("CMP_LT");
+    emit("CMP_LT"); return CMP_LT;
 }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 104 "lexer.l"
+#line 107 "lexer.l"
 {
-    emit("CMP_LE");
+    emit("CMP_LE"); return CMP_LE;
 }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 107 "lexer.l"
+#line 110 "lexer.l"
 {
-    emit("CMP_EQ");
+    emit("CMP_EQ"); return CMP_EQ;
 }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 110 "lexer.l"
+#line 113 "lexer.l"
 {
-    emit("CMP_NE");
+    emit("CMP_NE"); return CMP_NE;
 }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 113 "lexer.l"
-{ emit("OR"); }
+#line 116 "lexer.l"
+{ emit("OR"); return OR; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 114 "lexer.l"
-{ emit("AND"); }
+#line 117 "lexer.l"
+{ emit("AND"); return AND; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 115 "lexer.l"
-{ emit("BOOL_TRUE"); }
+#line 118 "lexer.l"
+{ emit("BOOL_TRUE"); return BOOL_TRUE; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 116 "lexer.l"
-{ emit("BOOL_FALSE"); }
+#line 119 "lexer.l"
+{ emit("BOOL_FALSE"); return BOOL_FALSE; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 118 "lexer.l"
-{ emit("WORM_PUSH_START"); }
+#line 121 "lexer.l"
+{ emit("WORM_PUSH_START"); return WORM_PUSH_START; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 119 "lexer.l"
+#line 122 "lexer.l"
 {
-    emit("WORM_PUSH_VERB");
+    emit("WORM_PUSH_VERB"); return WORM_PUSH_VERB;
 }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 122 "lexer.l"
-{ emit("WORM_PUSH_PREFIX"); }
+#line 125 "lexer.l"
+{ emit("WORM_PUSH_PREFIX"); return WORM_PUSH_PREFIX; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 123 "lexer.l"
-{ emit("WORM_PUSH_BY"); }
+#line 126 "lexer.l"
+{ emit("WORM_PUSH_BY"); return WORM_PUSH_BY; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 124 "lexer.l"
+#line 127 "lexer.l"
 {
-    emit("WORM_POP_VERB");
+    emit("WORM_POP_VERB"); return WORM_POP_VERB;
 }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 127 "lexer.l"
-{ emit("WORM_POP_OBJ"); }
+#line 130 "lexer.l"
+{ emit("WORM_POP_OBJ"); return WORM_POP_OBJ; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 128 "lexer.l"
-{ emit("WORM_TOP"); }
+#line 131 "lexer.l"
+{ emit("WORM_TOP"); return WORM_TOP; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 129 "lexer.l"
+#line 132 "lexer.l"
 {
-    emit("WORM_CLEAR_START");
+    emit("WORM_CLEAR_START"); return WORM_CLEAR_START;
 }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 132 "lexer.l"
+#line 135 "lexer.l"
 {
-    emit("WORM_CLEAR_END");
+    emit("WORM_CLEAR_END"); return WORM_CLEAR_END;
 }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 135 "lexer.l"
+#line 138 "lexer.l"
 {
-    emit("WORM_EMPTY");
+    emit("WORM_EMPTY"); return WORM_EMPTY;
 }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 139 "lexer.l"
+#line 142 "lexer.l"
 {
-    emit("READ_START");
+    emit("READ_START"); return READ_START;
 }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 142 "lexer.l"
+#line 145 "lexer.l"
 {
-    emit("READ_END");
+    emit("READ_END"); return READ_END;
 }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 145 "lexer.l"
+#line 148 "lexer.l"
 {
-    emit("PRINT_KW");
+    emit("PRINT_KW"); return PRINT_KW;
 }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 148 "lexer.l"
-{ emit("PRINT_OF"); }
+#line 151 "lexer.l"
+{ emit("PRINT_OF"); return PRINT_OF; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 149 "lexer.l"
-{ emit("PRINT_MESSAGE"); }
+#line 152 "lexer.l"
+{ emit("PRINT_MESSAGE"); return PRINT_MESSAGE; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 151 "lexer.l"
-{ emit("STRING_CONST"); }
+#line 154 "lexer.l"
+{ emit("STRING_CONST"); return STRING_CONST; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 152 "lexer.l"
+#line 155 "lexer.l"
 { lex_error(yylineno, "unterminated string", NULL); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 154 "lexer.l"
+#line 157 "lexer.l"
 {
-    emit("IF_START");
+    emit("IF_START"); return IF_START;
 }
 	YY_BREAK
 case 52:
 /* rule 52 can match eol */
 YY_RULE_SETUP
-#line 157 "lexer.l"
-{ emit("IF_OPEN"); }
+#line 160 "lexer.l"
+{ emit("IF_OPEN"); return IF_OPEN; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 158 "lexer.l"
+#line 161 "lexer.l"
 {
-    emit("IF_CONT");
+    emit("IF_CONT"); return IF_CONT;
 }
 	YY_BREAK
 case 54:
 /* rule 54 can match eol */
 YY_RULE_SETUP
-#line 161 "lexer.l"
-{ emit("COMMA_NL"); }
+#line 164 "lexer.l"
+{ emit("COMMA_NL"); return COMMA_NL; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 162 "lexer.l"
+#line 165 "lexer.l"
 {
-    emit("IF_THEN");
+    emit("IF_THEN"); return IF_THEN;
 }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 165 "lexer.l"
+#line 168 "lexer.l"
 {
-    emit("ELSE_KW");
+    emit("ELSE_KW"); return ELSE_KW;
 }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 168 "lexer.l"
-{ emit("DOT"); }
+#line 171 "lexer.l"
+{ emit("DOT"); return DOT; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 169 "lexer.l"
-{ emit("QUOTE_END"); }
+#line 172 "lexer.l"
+{ emit("QUOTE_END"); return QUOTE_END; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 171 "lexer.l"
+#line 174 "lexer.l"
 {
-    emit("REPEAT_START");
+    emit("REPEAT_START"); return REPEAT_START;
 }
 	YY_BREAK
 case 60:
 /* rule 60 can match eol */
 YY_RULE_SETUP
-#line 174 "lexer.l"
-{ emit("REPEAT_COLON"); }
+#line 177 "lexer.l"
+{ emit("REPEAT_COLON"); return REPEAT_COLON; }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 175 "lexer.l"
+#line 178 "lexer.l"
 {
-    emit("REPEAT_END");
+    emit("REPEAT_END"); return REPEAT_END;
 }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 179 "lexer.l"
+#line 182 "lexer.l"
 { lex_error(yylineno, "unexpected character", yytext); }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 181 "lexer.l"
+#line 184 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 2800 "lex.yy.c"
+#line 2803 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
-case YY_STATE_EOF(TITLE):
-case YY_STATE_EOF(AUTHOR):
-case YY_STATE_EOF(AUTHOR_NAME):
+case YY_STATE_EOF(S_TITLE):
+case YY_STATE_EOF(S_AUTHOR):
+case YY_STATE_EOF(S_AUTHOR_NAME):
 	yyterminate();
 
 	case YY_END_OF_BUFFER:
@@ -3818,7 +3821,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 181 "lexer.l"
+#line 184 "lexer.l"
 
 
 void load_tokens(const char* path) {
@@ -3879,24 +3882,14 @@ void lex_error(int line, const char* message, const char* text) {
     }
 }
 
-int main(int argc, char** argv) {
-    if (argc < 2) {
-        printf("Usage: %s <source file> [token list]\n", argv[0]);
-        return 1;
-    }
-
-    yyin = fopen(argv[1], "r");
+void scanner_init(const char* source, const char* token_list) {
+    yyin = fopen(source, "r");
     if (yyin == NULL) {
-        printf("Could not open source file %s\n", argv[1]);
-        return 1;
+        printf("Could not open source file %s\n", source);
+        exit(1);
     }
 
-    if (argc > 2) {
-        load_tokens(argv[2]);
-    }
-    else {
-        load_tokens("tokens.txt");
-    }
+    load_tokens(token_list);
 
     pif = fopen("pif.out", "w");
     fprintf(pif, "%-4s %-4s %s\n", "code", "pos", "token");
@@ -3904,9 +3897,10 @@ int main(int argc, char** argv) {
     fa_load(&id_fa, "fa/fa_id.in");
     fa_load(&int_fa, "fa/fa_int.in");
 
-    BEGIN(TITLE);
-    yylex();
+    BEGIN(S_TITLE);
+}
 
+int scanner_finish(void) {
     fclose(pif);
     fclose(yyin);
 
@@ -3914,17 +3908,9 @@ int main(int argc, char** argv) {
     st_print(st_file);
     fclose(st_file);
 
-    if (error_count == 0) {
-        printf("Lexically correct\n");
-    }
-    else {
-        printf("%d lexical error(s)\n", error_count);
-    }
-
     st_free();
     for (int i = 0; i < token_count; i++) {
         free(token_names[i]);
     }
-    return 0;
+    return error_count;
 }
-

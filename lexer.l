@@ -4,6 +4,7 @@
 #include <string.h>
 #include "st.h"
 #include "fa/fa.h"
+#include "poemia.tab.h"
 
 FA id_fa;
 FA int_fa;
@@ -21,7 +22,7 @@ void lex_error(int line, const char* message, const char* text);
 
 %option noyywrap yylineno
 
-%x TITLE AUTHOR AUTHOR_NAME
+%x S_TITLE S_AUTHOR S_AUTHOR_NAME
 
 TITLE_TEXT [a-zA-Z][a-zA-Z0-9 .;,!?-]*
 AUTHOR_TEXT [a-zA-Z][a-zA-Z0-9 .,_-]*
@@ -34,23 +35,23 @@ INT -?[0-9]+
 
 %%
 
-<TITLE>{TITLE_TEXT} { emit("TITLE"); }
-<TITLE>\n { emit("NEWLINE"); BEGIN(AUTHOR); }
+<S_TITLE>{TITLE_TEXT} { emit("TITLE"); return TITLE; }
+<S_TITLE>\n { BEGIN(S_AUTHOR); emit("NEWLINE"); return NEWLINE; }
 
-<AUTHOR>"by " { emit("BY"); BEGIN(AUTHOR_NAME); }
-<AUTHOR>\n { lex_error(yylineno - 1, "expected 'by <author>'", NULL); BEGIN(INITIAL); }
-<AUTHOR_NAME>{AUTHOR_TEXT} { emit("AUTHOR"); }
-<AUTHOR_NAME>\n { emit("NEWLINE"); BEGIN(INITIAL); }
+<S_AUTHOR>"by " { BEGIN(S_AUTHOR_NAME); emit("BY"); return BY; }
+<S_AUTHOR>\n { lex_error(yylineno - 1, "expected 'by <author>'", NULL); BEGIN(INITIAL); }
+<S_AUTHOR_NAME>{AUTHOR_TEXT} { emit("AUTHOR"); return AUTHOR; }
+<S_AUTHOR_NAME>\n { BEGIN(INITIAL); emit("NEWLINE"); return NEWLINE; }
 
 "There once was "|"Let there be "|"There existed "|"Once upon a time, there was "|"There also was "|"There was "|"Unbeknownst to man, there also was "|"There shall be " {
-    emit("DECL_KW");
+    emit("DECL_KW"); return DECL_KW;
 }
-", " { emit("COMMA_SP"); }
-"a math wizard" { emit("TYPE_INT"); }
-"an eternal worm" { emit("TYPE_QUEUE"); }
+", " { emit("COMMA_SP"); return COMMA_SP; }
+"a math wizard" { emit("TYPE_INT"); return TYPE_INT; }
+"an eternal worm" { emit("TYPE_QUEUE"); return TYPE_QUEUE; }
 
-"Should "/{ID} { emit("IF_CONT"); }
-"If "/{ID} { emit("IF_CONT"); }
+"Should "/{ID} { emit("IF_CONT"); return IF_CONT; }
+"If "/{ID} { emit("IF_CONT"); return IF_CONT; }
 
 {ID} {
     if (fa_accepts(&id_fa, yytext)) {
@@ -59,6 +60,7 @@ INT -?[0-9]+
     else {
         lex_error(yylineno, "invalid identifier", yytext);
     }
+    return IDENTIFIER;
 }
 {INT} {
     if (fa_accepts(&int_fa, yytext)) {
@@ -67,113 +69,114 @@ INT -?[0-9]+
     else {
         lex_error(yylineno, "invalid integer", yytext);
     }
+    return INT_CONST;
 }
-\n { emit("NEWLINE"); }
+\n { emit("NEWLINE"); return NEWLINE; }
 
 "Then, "|"One day, "|"Suddenly, "|"Surprisingly, "|"Shockingly, "|"As foretold, "|"Obviously, "|"To your dismay, "|"To their dismay, "|"Repeatedly, "|"Out of the blue, " {
-    emit("ASSIGN_KW");
+    emit("ASSIGN_KW"); return ASSIGN_KW;
 }
 " became "|" turned into "|" turned "|" was reborn as "|" will turn to "|" turns into "|" becomes "|" shall become "|" shapeshifts into "|" shapeshifted into "|" shall shapeshift into "|" shall turn into "|" is reborn as " {
-    emit("ASSIGN_MID");
+    emit("ASSIGN_MID"); return ASSIGN_MID;
 }
 
 " plus "|" added to "|" combined with "|" compounded with "|" merged with "|" along with " {
-    emit("OP_PLUS");
+    emit("OP_PLUS"); return OP_PLUS;
 }
 " minus "|" without "|" subtracting " {
-    emit("OP_MINUS");
+    emit("OP_MINUS"); return OP_MINUS;
 }
 " multiplied by "|" multiplied with "|" times " {
-    emit("OP_TIMES");
+    emit("OP_TIMES"); return OP_TIMES;
 }
 " divided by "|" shared between "|" given evenly to "|" split in " {
-    emit("OP_DIV");
+    emit("OP_DIV"); return OP_DIV;
 }
-"(" { emit("LPAREN"); }
-")" { emit("RPAREN"); }
+"(" { emit("LPAREN"); return LPAREN; }
+")" { emit("RPAREN"); return RPAREN; }
 
 " is greater than "|" trumps "|" shall be greater than "|" surpasses "|" dwarfs "|" dwarfed "|" surpassed "|" was greater than "|" dwarf "|" be greater than " {
-    emit("CMP_GT");
+    emit("CMP_GT"); return CMP_GT;
 }
 " is greater or equal to "|" shall be at least "|" is at least "|" was at least "|" be at least " {
-    emit("CMP_GE");
+    emit("CMP_GE"); return CMP_GE;
 }
 " is smaller than "|" is trumped by "|" is dwarfed by "|" shall be smaller than "|" was dwarfed by "|" was smaller than "|" be dwarfed by " {
-    emit("CMP_LT");
+    emit("CMP_LT"); return CMP_LT;
 }
 " is smaller or equal to "|" shall be smaller or equal to "|" is at most "|" shall be at most "|" was at most "|" be at most " {
-    emit("CMP_LE");
+    emit("CMP_LE"); return CMP_LE;
 }
 " is exactly "|" is precisely "|" is "|" mirrors "|" shall mirror "|" mirrored "|" was "|" be "|" was exactly "|" be exactly " {
-    emit("CMP_EQ");
+    emit("CMP_EQ"); return CMP_EQ;
 }
 " is different from "|" differs from "|" shall be different from "|" was different from "|" differ from " {
-    emit("CMP_NE");
+    emit("CMP_NE"); return CMP_NE;
 }
-" or "  { emit("OR"); }
-" and " { emit("AND"); }
-"grass is green" { emit("BOOL_TRUE"); }
-"black is white" { emit("BOOL_FALSE"); }
+" or "  { emit("OR"); return OR; }
+" and " { emit("AND"); return AND; }
+"grass is green" { emit("BOOL_TRUE"); return BOOL_TRUE; }
+"black is white" { emit("BOOL_FALSE"); return BOOL_FALSE; }
 
-"The eternal worm " { emit("WORM_PUSH_START"); }
+"The eternal worm " { emit("WORM_PUSH_START"); return WORM_PUSH_START; }
 " has devoured "|" devours "|" shall devour " {
-    emit("WORM_PUSH_VERB");
+    emit("WORM_PUSH_VERB"); return WORM_PUSH_VERB;
 }
-"Our dear " { emit("WORM_PUSH_PREFIX"); }
-" has been devoured by " { emit("WORM_PUSH_BY"); }
+"Our dear " { emit("WORM_PUSH_PREFIX"); return WORM_PUSH_PREFIX; }
+" has been devoured by " { emit("WORM_PUSH_BY"); return WORM_PUSH_BY; }
 " has released "|" releases "|" shall release "|" released " {
-    emit("WORM_POP_VERB");
+    emit("WORM_POP_VERB"); return WORM_POP_VERB;
 }
-"its earliest victim" { emit("WORM_POP_OBJ"); }
-"the earliest victim of " { emit("WORM_TOP"); }
+"its earliest victim" { emit("WORM_POP_OBJ"); return WORM_POP_OBJ; }
+"the earliest victim of " { emit("WORM_TOP"); return WORM_TOP; }
 "Rejoice! "|"With a swift blow, "|"Blood of an eternal worm shall spill, " {
-    emit("WORM_CLEAR_START");
+    emit("WORM_CLEAR_START"); return WORM_CLEAR_START;
 }
 " has been slain!"|" is slain"|", by name" {
-    emit("WORM_CLEAR_END");
+    emit("WORM_CLEAR_END"); return WORM_CLEAR_END;
 }
 " is hungry"|" is famished" {
-    emit("WORM_EMPTY");
+    emit("WORM_EMPTY"); return WORM_EMPTY;
 }
 
 "The gods shall communicate the role "|"A voice is heard from above, speaking of the reborn "|"Struck by divine inspiration, "|"The gods have bestowed a new identity upon "|"A song only their ears can hear has inspired "|"Dissatisfied with their existence, " {
-    emit("READ_START");
+    emit("READ_START"); return READ_START;
 }
 " shall take"|" is ready to take on a newfound identity"|" to find a new identity"|" has decided to look for their purpose in the stars" {
-    emit("READ_END");
+    emit("READ_END"); return READ_END;
 }
 "An enamoured poet writes down his thoughts"|"Channels across the globe broadcast breaking news"|"Words shall be written down for generations to come"|"A pale spectator hurried to town, to preach what he had found" {
-    emit("PRINT_KW");
+    emit("PRINT_KW"); return PRINT_KW;
 }
-", of " { emit("PRINT_OF"); }
-": " { emit("PRINT_MESSAGE"); }
+", of " { emit("PRINT_OF"); return PRINT_OF; }
+": " { emit("PRINT_MESSAGE"); return PRINT_MESSAGE; }
 
-\"{MSG_TEXT}\" { emit("STRING_CONST"); }
+\"{MSG_TEXT}\" { emit("STRING_CONST"); return STRING_CONST; }
 \"[^"\n]* { lex_error(yylineno, "unterminated string", NULL); }
 
 "They encountered a witch, who advised them carefully"|"They passed by a drunken sailor, who loudly shouted at them"|"Hearing the distant song of a bard, they approached to listen closely"|"You shall encounter an old lady, who will advise you the following"|"An old lady approaches, teary eyed, warning our heroes" {
-    emit("IF_START");
+    emit("IF_START"); return IF_START;
 }
-":\n'" { emit("IF_OPEN"); }
+":\n'" { emit("IF_OPEN"); return IF_OPEN; }
 "Beware travellers, for if "|"Tread carefully, for if "|"Listen here, bastards! If "|"I curse you, peasants! If "|"So says the old song, that if "|"The townsfolk have been saying that "|"I heard that if " {
-    emit("IF_CONT");
+    emit("IF_CONT"); return IF_CONT;
 }
-",\n" { emit("COMMA_NL"); }
+",\n" { emit("COMMA_NL"); return COMMA_NL; }
 "Then the gods shall decree that"|"The legend says that"|"It is said that"|"I shall make sure that" {
-    emit("IF_THEN");
+    emit("IF_THEN"); return IF_THEN;
 }
 "Should the prophecy not be fulfilled,"|"Otherwise,"|"Should lady luck not be on your side,"|"Should the odds be in your favour," {
-    emit("ELSE_KW");
+    emit("ELSE_KW"); return ELSE_KW;
 }
-"." { emit("DOT"); }
-"'" { emit("QUOTE_END"); }
+"." { emit("DOT"); return DOT; }
+"'" { emit("QUOTE_END"); return QUOTE_END; }
 
 "Our heroes found themselves waking up every day to experience the following scenario exactly"|"They realised they had been dreaming the same strange dream every night"|"A curse has been cast upon our heroes, rendering them to repeat the following, mindlessly" {
-    emit("REPEAT_START");
+    emit("REPEAT_START"); return REPEAT_START;
 }
-":\n" { emit("REPEAT_COLON"); }
+":\n" { emit("REPEAT_COLON"); return REPEAT_COLON; }
 "But they realised they wouldn't go back to normal until "|"But they realised the condition to break the spell was that "|"But fortunately, they were able to break the curse under the condition that " {
-    emit("REPEAT_END");
+    emit("REPEAT_END"); return REPEAT_END;
 }
 
 <*>. { lex_error(yylineno, "unexpected character", yytext); }
@@ -238,24 +241,14 @@ void lex_error(int line, const char* message, const char* text) {
     }
 }
 
-int main(int argc, char** argv) {
-    if (argc < 2) {
-        printf("Usage: %s <source file> [token list]\n", argv[0]);
-        return 1;
-    }
-
-    yyin = fopen(argv[1], "r");
+void scanner_init(const char* source, const char* token_list) {
+    yyin = fopen(source, "r");
     if (yyin == NULL) {
-        printf("Could not open source file %s\n", argv[1]);
-        return 1;
+        printf("Could not open source file %s\n", source);
+        exit(1);
     }
 
-    if (argc > 2) {
-        load_tokens(argv[2]);
-    }
-    else {
-        load_tokens("tokens.txt");
-    }
+    load_tokens(token_list);
 
     pif = fopen("pif.out", "w");
     fprintf(pif, "%-4s %-4s %s\n", "code", "pos", "token");
@@ -263,9 +256,10 @@ int main(int argc, char** argv) {
     fa_load(&id_fa, "fa/fa_id.in");
     fa_load(&int_fa, "fa/fa_int.in");
 
-    BEGIN(TITLE);
-    yylex();
+    BEGIN(S_TITLE);
+}
 
+int scanner_finish(void) {
     fclose(pif);
     fclose(yyin);
 
@@ -273,16 +267,9 @@ int main(int argc, char** argv) {
     st_print(st_file);
     fclose(st_file);
 
-    if (error_count == 0) {
-        printf("Lexically correct\n");
-    }
-    else {
-        printf("%d lexical error(s)\n", error_count);
-    }
-
     st_free();
     for (int i = 0; i < token_count; i++) {
         free(token_names[i]);
     }
-    return 0;
+    return error_count;
 }
